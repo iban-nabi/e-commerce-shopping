@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: store
+  datasource:
+    username: root
+    password: jiejie7jie
+    url: jdbc:mysql://localhost:3306/e-commerce?createDatabaseIfNotExist=true
+  jpa:
+    show-sql: true
