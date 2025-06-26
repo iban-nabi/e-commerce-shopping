@@ -1,6 +1,7 @@
 package com.ecommerce.store.controllers;
 
 import com.ecommerce.store.dtos.RegisterUserRequest;
+import com.ecommerce.store.dtos.UpdateUserRequest;
 import com.ecommerce.store.dtos.UserDto;
 import com.ecommerce.store.entities.User;
 import com.ecommerce.store.mappers.UserMapper;
@@ -64,5 +65,23 @@ public class UserController {
         // return a response entity of created (401), along with te User Dto, the uri is used here as well
         URI uri = uriBuilder.path("/users/{id}").buildAndExpand(userDto.getId()).toUri();
         return ResponseEntity.created(uri).body(userDto);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDto> updateUser(
+            @PathVariable Long id, // id of the user you want to update
+            @RequestBody UpdateUserRequest request // the request body/information to be updated
+            ){
+
+        User user = userRepository.findById(id).orElse(null); // find if user is present
+
+        if(user==null){
+            return ResponseEntity.notFound().build(); // if user is not found, return 404
+        }
+
+        userMapper.updateUser(request, user); // if user is present, call mapper to map the current user and the request body (update user dto)
+        userRepository.save(user); // save the update
+
+        return ResponseEntity.ok(userMapper.toDto(user)); // return the updated user
     }
 }
