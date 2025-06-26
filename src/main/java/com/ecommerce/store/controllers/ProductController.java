@@ -1,11 +1,15 @@
 package com.ecommerce.store.controllers;
 
+import com.ecommerce.store.dtos.CreateProductRequest;
 import com.ecommerce.store.dtos.ProductDto;
+import com.ecommerce.store.entities.Product;
 import com.ecommerce.store.mappers.ProductMapper;
 import com.ecommerce.store.repositories.ProductRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.Objects;
@@ -46,4 +50,46 @@ public class ProductController {
         }
     }
 
+
+    @PostMapping
+    public ResponseEntity<ProductDto> createProduct(
+            @RequestBody CreateProductRequest request,
+            UriComponentsBuilder uriBuilder
+    ) {
+        Product product = productMapper.toEntity(request);
+        productRepository.save(product);
+
+        ProductDto productDto = productMapper.toDto(product);
+
+        uriBuilder.path("/products/{id}").buildAndExpand(productDto.getId());
+        return ResponseEntity.created(uriBuilder.build().toUri()).body(productDto);
+    }
+
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductDto> updateProduct(
+            @PathVariable Long id,
+            @RequestBody ProductDto request
+    ){
+        Product product = productRepository.findById(id).orElse(null);
+        if(product == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        productMapper.updateProduct(request, product);
+        productRepository.save(product);
+
+        return ResponseEntity.ok(productMapper.toDto(product));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(Long id) {
+        Product product = productRepository.findById(id).orElse(null);
+        if(product == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        productRepository.delete(product);
+        return ResponseEntity.noContent().build();
+    }
 }
