@@ -2,8 +2,10 @@ package com.ecommerce.store.controllers;
 
 import com.ecommerce.store.dtos.CreateProductRequest;
 import com.ecommerce.store.dtos.ProductDto;
+import com.ecommerce.store.entities.Category;
 import com.ecommerce.store.entities.Product;
 import com.ecommerce.store.mappers.ProductMapper;
+import com.ecommerce.store.repositories.CategoryRepository;
 import com.ecommerce.store.repositories.ProductRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.RequestEntity;
@@ -22,6 +24,7 @@ public class ProductController {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final CategoryRepository categoryRepository;
 
     @GetMapping
     public List<ProductDto> getProducts(
@@ -56,7 +59,13 @@ public class ProductController {
             @RequestBody CreateProductRequest request,
             UriComponentsBuilder uriBuilder
     ) {
+        Category category = categoryRepository.findById(request.getCategoryId()).orElse(null);
+        if(category == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         Product product = productMapper.toEntity(request);
+        product.setCategory(category);
         productRepository.save(product);
 
         ProductDto productDto = productMapper.toDto(product);
@@ -71,12 +80,18 @@ public class ProductController {
             @PathVariable Long id,
             @RequestBody ProductDto request
     ){
+        Category category = categoryRepository.findById(request.getCategoryId()).orElse(null);
+        if(category == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         Product product = productRepository.findById(id).orElse(null);
         if(product == null) {
             return ResponseEntity.notFound().build();
         }
 
         productMapper.updateProduct(request, product);
+        product.setCategory(category);
         productRepository.save(product);
 
         return ResponseEntity.ok(productMapper.toDto(product));
